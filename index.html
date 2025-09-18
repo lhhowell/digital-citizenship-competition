@@ -1,1 +1,444 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Citizenship Week Competition</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Trophy, Star, CheckCircle, Clock, Users } = lucide;
+
+        const DigitalCitizenshipCompetition = () => {
+            const [currentDay, setCurrentDay] = useState(0);
+            const [students, setStudents] = useState(() => {
+                const saved = localStorage.getItem('digitalCitizenshipStudents');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [currentStudent, setCurrentStudent] = useState('');
+            const [selectedAnswer, setSelectedAnswer] = useState('');
+            const [taskCompleted, setTaskCompleted] = useState('');
+            const [showResult, setShowResult] = useState(false);
+
+            useEffect(() => {
+                localStorage.setItem('digitalCitizenshipStudents', JSON.stringify(students));
+            }, [students]);
+
+            const days = [
+                {
+                    day: 'Monday',
+                    theme: 'Watch Your Digital Footprint',
+                    color: 'bg-blue-500',
+                    icon: '👣',
+                    question: 'What is a digital footprint?',
+                    options: [
+                        'The size of your computer screen',
+                        'All the traces you leave online through your activities',
+                        'Your internet password',
+                        'The speed of your internet connection'
+                    ],
+                    correct: 1,
+                    task: 'Upload a photo wearing silly socks/footwear',
+                    points: { question: 50, task: 30 }
+                },
+                {
+                    day: 'Tuesday',
+                    theme: 'Hats On, Screens Off!',
+                    color: 'bg-green-500',
+                    icon: '🎩',
+                    question: 'What is a healthy daily screen time limit for students?',
+                    options: [
+                        'No limit - use screens as much as you want',
+                        '1-2 hours for entertainment, more for schoolwork',
+                        '10+ hours per day',
+                        'Only 10 minutes per day total'
+                    ],
+                    correct: 1,
+                    task: 'Share 3 offline activities you did while wearing a hat',
+                    points: { question: 50, task: 30 }
+                },
+                {
+                    day: 'Wednesday',
+                    theme: 'Kindness Counts Day',
+                    color: 'bg-yellow-500',
+                    icon: '💖',
+                    question: 'What should you do if you see cyberbullying online?',
+                    options: [
+                        'Join in with the bullying',
+                        'Ignore it completely',
+                        'Report it and support the victim kindly',
+                        'Share it with more people'
+                    ],
+                    correct: 2,
+                    task: 'Write 3 kind messages and wear bright colors in your photo',
+                    points: { question: 50, task: 30 }
+                },
+                {
+                    day: 'Thursday',
+                    theme: 'Be a Good Sport Online',
+                    color: 'bg-purple-500',
+                    icon: '⚽',
+                    question: 'How should you react when losing an online game?',
+                    options: [
+                        'Quit immediately and blame teammates',
+                        'Say "good game" and learn from the experience',
+                        'Call the winners cheaters',
+                        'Break your device in anger'
+                    ],
+                    correct: 1,
+                    task: 'Upload photo in sports team gear + create a team chant about digital citizenship',
+                    points: { question: 50, task: 40 }
+                },
+                {
+                    day: 'Friday',
+                    theme: 'School Spirit Day',
+                    color: 'bg-red-500',
+                    icon: '🏫',
+                    question: 'Why is it important to represent your school positively online?',
+                    options: [
+                        'It doesn\'t matter what you post',
+                        'Your online behavior reflects on your entire school community',
+                        'Only teachers need to worry about this',
+                        'You should only post negative things about school'
+                    ],
+                    correct: 1,
+                    task: 'Wear school colors/gear + write a Digital Citizenship Pledge for your school',
+                    points: { question: 50, task: 40 }
+                }
+            ];
+
+            const addStudent = () => {
+                if (currentStudent.trim() && !students.find(s => s.name === currentStudent.trim())) {
+                    setStudents([...students, { 
+                        name: currentStudent.trim(), 
+                        totalPoints: 0,
+                        dailyProgress: Array(5).fill().map(() => ({ question: false, task: false, points: 0 }))
+                    }]);
+                    setCurrentStudent('');
+                }
+            };
+
+            const submitAnswer = (studentName) => {
+                const correctAnswer = days[currentDay].correct;
+                const isCorrect = parseInt(selectedAnswer) === correctAnswer;
+                const points = isCorrect ? days[currentDay].points.question : 0;
+                
+                setStudents(students.map(student => {
+                    if (student.name === studentName) {
+                        const newProgress = [...student.dailyProgress];
+                        newProgress[currentDay] = {
+                            ...newProgress[currentDay],
+                            question: true,
+                            points: newProgress[currentDay].points + points
+                        };
+                        return {
+                            ...student,
+                            dailyProgress: newProgress,
+                            totalPoints: student.totalPoints + points
+                        };
+                    }
+                    return student;
+                }));
+                
+                setShowResult(`${isCorrect ? '✅ Correct!' : '❌ Incorrect.'} ${isCorrect ? `+${points} points!` : 'Better luck next time!'}`);
+                setSelectedAnswer('');
+                setTimeout(() => setShowResult(false), 3000);
+            };
+
+            const submitTask = (studentName) => {
+                if (taskCompleted.trim()) {
+                    const points = days[currentDay].points.task;
+                    
+                    setStudents(students.map(student => {
+                        if (student.name === studentName) {
+                            const newProgress = [...student.dailyProgress];
+                            newProgress[currentDay] = {
+                                ...newProgress[currentDay],
+                                task: true,
+                                points: newProgress[currentDay].points + points
+                            };
+                            return {
+                                ...student,
+                                dailyProgress: newProgress,
+                                totalPoints: student.totalPoints + points
+                            };
+                        }
+                        return student;
+                    }));
+                    
+                    setTaskCompleted('');
+                    setShowResult(`✅ Task completed! +${points} points!`);
+                    setTimeout(() => setShowResult(false), 3000);
+                }
+            };
+
+            const resetData = () => {
+                if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                    setStudents([]);
+                    localStorage.removeItem('digitalCitizenshipStudents');
+                }
+            };
+
+            const exportData = () => {
+                const dataStr = JSON.stringify(students, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileDefaultName = 'digital-citizenship-data.json';
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            };
+
+            const sortedStudents = [...students].sort((a, b) => b.totalPoints - a.totalPoints);
+            const currentDayData = days[currentDay];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                                🏆 Digital Citizenship Week Competition 🏆
+                            </h1>
+                            <p className="text-lg text-gray-600">Complete daily challenges and climb the leaderboard!</p>
+                            <div className="mt-4 space-x-4">
+                                <button
+                                    onClick={exportData}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                    disabled={students.length === 0}
+                                >
+                                    Export Data
+                                </button>
+                                <button
+                                    onClick={resetData}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                >
+                                    Reset All Data
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Day Navigation */}
+                        <div className="flex flex-wrap justify-center gap-2 mb-8">
+                            {days.map((day, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentDay(index)}
+                                    className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                                        currentDay === index 
+                                            ? `${day.color} text-white` 
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {day.icon} {day.day}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid lg:grid-cols-3 gap-8">
+                            {/* Student Registration & Activities */}
+                            <div className="lg:col-span-2">
+                                {/* Add Student */}
+                                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center">
+                                        <Users className="mr-2" /> Add Student
+                                    </h3>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={currentStudent}
+                                            onChange={(e) => setCurrentStudent(e.target.value)}
+                                            placeholder="Enter student name"
+                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            onKeyPress={(e) => e.key === 'Enter' && addStudent()}
+                                        />
+                                        <button
+                                            onClick={addStudent}
+                                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Current Day Challenge */}
+                                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                                    <div className={`${currentDayData.color} text-white p-4 rounded-lg mb-6`}>
+                                        <h2 className="text-2xl font-bold mb-2">
+                                            {currentDayData.icon} {currentDayData.day}: {currentDayData.theme}
+                                        </h2>
+                                    </div>
+
+                                    {/* Question Section */}
+                                    <div className="mb-8">
+                                        <h3 className="text-lg font-bold mb-4 flex items-center">
+                                            <Star className="mr-2 text-yellow-500" /> 
+                                            Question ({currentDayData.points.question} points)
+                                        </h3>
+                                        <p className="text-gray-700 mb-4 font-medium">{currentDayData.question}</p>
+                                        
+                                        <div className="space-y-2 mb-4">
+                                            {currentDayData.options.map((option, index) => (
+                                                <label key={index} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="answer"
+                                                        value={index}
+                                                        checked={selectedAnswer === index.toString()}
+                                                        onChange={(e) => setSelectedAnswer(e.target.value)}
+                                                        className="mr-3"
+                                                    />
+                                                    <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                                                    <span>{option}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+
+                                        <select 
+                                            onChange={(e) => e.target.value && submitAnswer(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            value=""
+                                        >
+                                            <option value="">Select a student to submit answer</option>
+                                            {students.filter(s => !s.dailyProgress[currentDay].question).map(student => (
+                                                <option key={student.name} value={student.name}>{student.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Task Section */}
+                                    <div>
+                                        <h3 className="text-lg font-bold mb-4 flex items-center">
+                                            <CheckCircle className="mr-2 text-green-500" />
+                                            Daily Task ({currentDayData.points.task} points)
+                                        </h3>
+                                        <p className="text-gray-700 mb-4 font-medium">{currentDayData.task}</p>
+                                        
+                                        <textarea
+                                            value={taskCompleted}
+                                            onChange={(e) => setTaskCompleted(e.target.value)}
+                                            placeholder="Describe how you completed this task..."
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
+                                            rows="3"
+                                        />
+
+                                        <select 
+                                            onChange={(e) => e.target.value && submitTask(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                            value=""
+                                        >
+                                            <option value="">Select a student to submit task</option>
+                                            {students.filter(s => !s.dailyProgress[currentDay].task).map(student => (
+                                                <option key={student.name} value={student.name}>{student.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {showResult && (
+                                        <div className={`mt-4 p-4 rounded-lg ${
+                                            showResult.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            {showResult}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Leaderboard */}
+                            <div>
+                                <div className="bg-white rounded-lg shadow-lg p-6 sticky top-6">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center">
+                                        <Trophy className="mr-2 text-yellow-500" /> Leaderboard
+                                    </h3>
+                                    
+                                    {sortedStudents.length === 0 ? (
+                                        <p className="text-gray-500 text-center py-8">No students yet. Add some students to get started!</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {sortedStudents.map((student, index) => (
+                                                <div key={student.name} className={`flex items-center justify-between p-3 rounded-lg ${
+                                                    index === 0 ? 'bg-yellow-100 border-2 border-yellow-300' :
+                                                    index === 1 ? 'bg-gray-100 border-2 border-gray-300' :
+                                                    index === 2 ? 'bg-orange-100 border-2 border-orange-300' :
+                                                    'bg-gray-50'
+                                                }`}>
+                                                    <div className="flex items-center">
+                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${
+                                                            index === 0 ? 'bg-yellow-500 text-white' :
+                                                            index === 1 ? 'bg-gray-400 text-white' :
+                                                            index === 2 ? 'bg-orange-400 text-white' :
+                                                            'bg-gray-200 text-gray-600'
+                                                        }`}>
+                                                            {index + 1}
+                                                        </span>
+                                                        <div>
+                                                            <p className="font-semibold">{student.name}</p>
+                                                            <div className="flex space-x-1">
+                                                                {student.dailyProgress.map((day, dayIndex) => (
+                                                                    <div key={dayIndex} className="flex">
+                                                                        <span className={`w-2 h-2 rounded-full ${
+                                                                            day.question ? 'bg-blue-500' : 'bg-gray-200'
+                                                                        }`} title="Question"></span>
+                                                                        <span className={`w-2 h-2 rounded-full ml-1 ${
+                                                                            day.task ? 'bg-green-500' : 'bg-gray-200'
+                                                                        }`} title="Task"></span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="font-bold text-lg">{student.totalPoints}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Points Legend */}
+                                    <div className="mt-6 pt-4 border-t border-gray-200">
+                                        <h4 className="font-semibold mb-2">Daily Points:</h4>
+                                        <div className="text-sm space-y-1">
+                                            <div className="flex justify-between">
+                                                <span>Question Correct:</span>
+                                                <span className="font-semibold">50 pts</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Task Completed:</span>
+                                                <span className="font-semibold">30-40 pts</span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>Question
+                                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1 ml-3"></span>Task
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<DigitalCitizenshipCompetition />, document.getElementById('root'));
+    </script>
+</body>
+</html>
