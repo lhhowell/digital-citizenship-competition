@@ -102,7 +102,6 @@
         let currentDay = 0;
         let students = JSON.parse(localStorage.getItem('digitalCitizenshipStudents') || '[]');
         let selectedAnswer = '';
-        let taskText = '';
 
         const days = [
             {
@@ -119,6 +118,8 @@
                 ],
                 correct: 1,
                 task: 'Upload a photo wearing silly socks/footwear',
+                padletUrl: 'YOUR_MONDAY_PADLET_URL_HERE',
+                padletTitle: 'Monday: Silly Socks Digital Footprint',
                 points: { question: 50, task: 30 }
             },
             {
@@ -135,6 +136,8 @@
                 ],
                 correct: 1,
                 task: 'Share 3 offline activities you did while wearing a hat',
+                padletUrl: 'YOUR_TUESDAY_PADLET_URL_HERE',
+                padletTitle: 'Tuesday: Hat Photos & Offline Activities',
                 points: { question: 50, task: 30 }
             },
             {
@@ -151,6 +154,8 @@
                 ],
                 correct: 2,
                 task: 'Write 3 kind messages and wear bright colors in your photo',
+                padletUrl: 'YOUR_WEDNESDAY_PADLET_URL_HERE',
+                padletTitle: 'Wednesday: Kindness Messages & Bright Colors',
                 points: { question: 50, task: 30 }
             },
             {
@@ -167,6 +172,8 @@
                 ],
                 correct: 1,
                 task: 'Upload photo in sports team gear + create a team chant about digital citizenship',
+                padletUrl: 'YOUR_THURSDAY_PADLET_URL_HERE',
+                padletTitle: 'Thursday: Sports Gear & Team Chants',
                 points: { question: 50, task: 40 }
             },
             {
@@ -183,6 +190,8 @@
                 ],
                 correct: 1,
                 task: 'Wear school colors/gear + write a Digital Citizenship Pledge for your school',
+                padletUrl: 'YOUR_FRIDAY_PADLET_URL_HERE',
+                padletTitle: 'Friday: School Spirit & Digital Citizenship Pledges',
                 points: { question: 50, task: 40 }
             }
         ];
@@ -216,12 +225,20 @@
         function setCurrentDay(dayIndex) {
             currentDay = dayIndex;
             selectedAnswer = '';
-            taskText = '';
             updateDisplay();
         }
 
         function setAnswer(answerIndex) {
             selectedAnswer = answerIndex;
+        }
+
+        function openPadlet() {
+            const currentDayData = days[currentDay];
+            if (currentDayData.padletUrl && currentDayData.padletUrl !== 'YOUR_MONDAY_PADLET_URL_HERE') {
+                window.open(currentDayData.padletUrl, '_blank');
+            } else {
+                alert('Padlet URL not set yet. Please add your Padlet URLs to the code.');
+            }
         }
 
         function submitAnswer() {
@@ -248,10 +265,13 @@
 
         function submitTask() {
             const studentSelect = document.getElementById('taskStudentSelect');
-            const textarea = document.getElementById('taskTextarea');
+            const checkbox = document.getElementById('taskCompleted');
             const studentName = studentSelect.value;
             
-            if (!studentName || !textarea.value.trim()) return;
+            if (!studentName || !checkbox.checked) {
+                alert('Please select a student and confirm the task was completed on Padlet.');
+                return;
+            }
 
             const points = days[currentDay].points.task;
             
@@ -261,7 +281,7 @@
             student.totalPoints += points;
             
             saveData();
-            textarea.value = '';
+            checkbox.checked = false;
             
             showMessage(`✅ Task completed! +${points} points!`, true);
             updateDisplay();
@@ -356,7 +376,6 @@
 
                     <select 
                         id="questionStudentSelect"
-                        onchange="if(this.value && selectedAnswer !== '') submitAnswer()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                     >
                         <option value="">Select a student to submit answer</option>
@@ -373,23 +392,47 @@
                     </button>
                 </div>
 
-                <!-- Task Section -->
+                <!-- Task Section with Padlet Integration -->
                 <div>
                     <h3 class="text-lg font-bold mb-4">✅ Daily Task (${currentDayData.points.task} points)</h3>
                     <p class="text-gray-700 mb-4 font-medium">${currentDayData.task}</p>
                     
-                    <textarea
-                        id="taskTextarea"
-                        placeholder="Describe how you completed this task..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mb-4"
-                        rows="3"
-                    ></textarea>
+                    <!-- Padlet Instructions -->
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">📋 How to Complete This Task:</h4>
+                        <ol class="text-blue-700 text-sm space-y-1 ml-4">
+                            <li>1. Complete the task (take photo, write messages, etc.)</li>
+                            <li>2. Click the Padlet button below to open today's submission board</li>
+                            <li>3. Upload your photo/response to the Padlet</li>
+                            <li>4. Come back here and check the box to claim your points!</li>
+                        </ol>
+                    </div>
+
+                    <!-- Padlet Button -->
+                    <button 
+                        onclick="openPadlet()" 
+                        class="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors mb-4 flex items-center justify-center"
+                    >
+                        🎨 Open ${currentDayData.padletTitle}
+                    </button>
+
+                    <!-- Task Completion -->
+                    <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="taskCompleted"
+                                class="mr-3 w-4 h-4"
+                            />
+                            <span class="text-sm">✅ I have uploaded my response to the Padlet above</span>
+                        </label>
+                    </div>
 
                     <select 
                         id="taskStudentSelect"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mb-2"
                     >
-                        <option value="">Select a student to submit task</option>
+                        <option value="">Select a student to award task points</option>
                         ${availableStudentsTask.map(student => `
                             <option value="${student.name}">${student.name}</option>
                         `).join('')}
@@ -399,7 +442,7 @@
                         onclick="submitTask()" 
                         class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                     >
-                        Submit Task
+                        Award Task Points
                     </button>
                 </div>
             `;
